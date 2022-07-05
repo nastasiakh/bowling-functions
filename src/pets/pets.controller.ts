@@ -13,7 +13,6 @@ import { PetsService } from './pets.service';
 @Controller('pets')
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
-  private _pets: Array<PetDto> = [{ id: 0, name: 'Barsik' }];
   @Get()
   getAll(): Array<PetDto> {
     return this.petsService.getAll().map((p) => {
