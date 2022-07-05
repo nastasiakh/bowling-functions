@@ -1,22 +1,57 @@
 import { Injectable } from '@nestjs/common';
 import { PetEntity } from './pet.entity';
+import * as admin from 'firebase-admin';
+admin.initializeApp();
 
 @Injectable()
 export class PetsService {
-  private _pets: Array<PetEntity> = [{ id: 0, name: 'Barsik', gender: 'male' }];
-
-  getAll(): Array<PetEntity> {
-    return this._pets;
+  async getAll(): Promise<Array<PetEntity>> {
+    const reference = await admin.firestore().collection('pets').get();
+    return reference.docs.map((data) => {
+      return {
+        id: data.id,
+        name: data.data()['name'],
+        gender: data.data()['gender'],
+      };
+    });
   }
 
-  create(pet: PetEntity): PetEntity {
-    this._pets.push(pet);
-    return pet;
+  async create(pet: PetEntity): Promise<PetEntity> {
+    const reference = await admin.firestore().collection('pets').add({
+      name: pet.name,
+      gender: pet.gender,
+    });
+    return { id: reference.id, name: pet.name, gender: pet.gender };
   }
 
-  delete(petId: number): PetEntity {
-    const pet = this._pets.find((p) => p.id === petId);
-    this._pets = this._pets.filter((p) => p.id !== petId);
-    return pet;
+  async getById(petId: string): Promise<PetEntity> {
+    const reference = await admin
+      .firestore()
+      .collection('pets')
+      .doc(petId)
+      .get();
+    return {
+      id: reference.id,
+      name: reference.data()['name'],
+      gender: reference.data()['gender'],
+    };
+  }
+
+  async delete(petId: string): Promise<PetEntity> {
+    const reference = await admin
+      .firestore()
+      .collection('pets')
+      .doc(petId)
+      .get();
+    if (reference.exists) {
+      await admin.firestore().collection('pets').doc(petId).delete();
+      return {
+        id: reference.id,
+        name: reference.data()['name'],
+        gender: reference.data()['gender'],
+      };
+    } else {
+      throw 'Pet not found';
+    }
   }
 }

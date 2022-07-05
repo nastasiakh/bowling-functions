@@ -1,5 +1,5 @@
 export interface PetEntity {
-  id: number;
+  id: string;
   name: string;
   gender: string;
 }

@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { PetDto } from './pets.dto';
 import { PetsService } from './pets.service';
 
@@ -14,21 +6,30 @@ import { PetsService } from './pets.service';
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
   @Get()
-  getAll(): Array<PetDto> {
-    return this.petsService.getAll().map((p) => {
+  async getAll(): Promise<Array<PetDto>> {
+    return (await this.petsService.getAll()).map((p) => {
       return { id: p.id, name: p.name };
     });
   }
 
+  @Get(':id')
+  async getById(@Param('id') petId: string): Promise<PetDto> {
+    const { id, name } = await this.petsService.getById(petId);
+    return { id, name };
+  }
+
   @Post()
-  create(@Body() pet: PetDto): PetDto {
-    const { id, name } = this.petsService.create({ ...pet, gender: 'male' });
+  async create(@Body() pet: PetDto): Promise<PetDto> {
+    const { id, name } = await this.petsService.create({
+      ...pet,
+      gender: 'male',
+    });
     return { id, name };
   }
 
   @Delete(':id')
-  delete(@Param('id', new ParseIntPipe()) petId: number): PetDto {
-    const { id, name } = this.petsService.delete(petId);
+  async delete(@Param('id') petId: string): Promise<PetDto> {
+    const { id, name } = await this.petsService.delete(petId);
     return { id, name };
   }
 }
